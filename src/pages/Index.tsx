@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
 
 interface Product {
@@ -18,6 +19,8 @@ interface Product {
   material: string;
   size: string;
   inStock: boolean;
+  description?: string;
+  features?: string[];
 }
 
 const Index = () => {
@@ -26,6 +29,8 @@ const Index = () => {
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 200000]);
   const [cartCount, setCartCount] = useState(0);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const products: Product[] = [
     {
@@ -38,6 +43,8 @@ const Index = () => {
       material: 'Ткань',
       size: '220x90x85',
       inStock: true,
+      description: 'Современный диван в скандинавском стиле с удобными подушками и прочным каркасом. Идеально подходит для создания уютной атмосферы в гостиной.',
+      features: ['Съемные чехлы', 'Ортопедический матрас', 'Экологичные материалы', 'Гарантия 2 года'],
     },
     {
       id: 2,
@@ -49,6 +56,8 @@ const Index = () => {
       material: 'Дерево',
       size: '180x90x75',
       inStock: true,
+      description: 'Элегантная обеденная группа из массива дуба. Стол и 6 стульев в комплекте. Надежная конструкция прослужит долгие годы.',
+      features: ['Массив дуба', '6 стульев в комплекте', 'Защитное покрытие', 'Раздвижной механизм'],
     },
     {
       id: 3,
@@ -60,6 +69,8 @@ const Index = () => {
       material: 'ЛДСП',
       size: '200x160x100',
       inStock: true,
+      description: 'Удобная двуспальная кровать с мягким изголовьем. Просторное спальное место и стильный дизайн для современной спальни.',
+      features: ['Мягкое изголовье', 'Ортопедическое основание', 'Ящики для хранения', 'Простая сборка'],
     },
   ];
 
@@ -171,10 +182,16 @@ const Index = () => {
                 {filteredProducts.map((product, index) => (
                   <Card
                     key={product.id}
-                    className="group overflow-hidden hover:shadow-2xl transition-all duration-300 animate-scale-in"
+                    className="group overflow-hidden hover:shadow-2xl transition-all duration-300 animate-scale-in cursor-pointer"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className="relative overflow-hidden aspect-[4/3]">
+                    <div 
+                      className="relative overflow-hidden aspect-[4/3]"
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setIsDialogOpen(true);
+                      }}
+                    >
                       <img
                         src={product.image}
                         alt={product.name}
@@ -184,6 +201,14 @@ const Index = () => {
                         <Badge className="bg-secondary">
                           {product.category}
                         </Badge>
+                      </div>
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <Button variant="secondary" size="sm">
+                            <Icon name="Eye" className="w-4 h-4 mr-2" />
+                            Быстрый просмотр
+                          </Button>
+                        </div>
                       </div>
                     </div>
                     
@@ -221,6 +246,124 @@ const Index = () => {
             </main>
           </div>
         </div>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-heading text-2xl">{selectedProduct?.name}</DialogTitle>
+            </DialogHeader>
+            {selectedProduct && (
+              <div className="grid md:grid-cols-2 gap-6 mt-4">
+                <div className="space-y-4">
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="w-full h-auto rounded-lg shadow-lg"
+                  />
+                  <div className="flex gap-2">
+                    <Badge variant="default" className="text-sm px-3 py-1">
+                      {selectedProduct.category}
+                    </Badge>
+                    <Badge variant="outline" className="text-sm px-3 py-1">
+                      {selectedProduct.style}
+                    </Badge>
+                    <Badge variant="outline" className="text-sm px-3 py-1">
+                      {selectedProduct.material}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="font-heading font-bold text-3xl text-primary">
+                        {selectedProduct.price.toLocaleString()} ₽
+                      </span>
+                      {selectedProduct.inStock && (
+                        <Badge variant="default" className="bg-green-500">
+                          <Icon name="Check" className="w-4 h-4 mr-1" />
+                          В наличии
+                        </Badge>
+                      )}
+                    </div>
+
+                    <p className="text-muted-foreground leading-relaxed mb-6">
+                      {selectedProduct.description}
+                    </p>
+
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Icon name="Ruler" className="w-5 h-5 text-primary" />
+                        <span className="font-semibold">Размеры:</span>
+                        <span className="text-muted-foreground">{selectedProduct.size} см</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Icon name="Package" className="w-5 h-5 text-secondary" />
+                        <span className="font-semibold">Материал:</span>
+                        <span className="text-muted-foreground">{selectedProduct.material}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Icon name="Palette" className="w-5 h-5 text-accent" />
+                        <span className="font-semibold">Стиль:</span>
+                        <span className="text-muted-foreground">{selectedProduct.style}</span>
+                      </div>
+                    </div>
+
+                    {selectedProduct.features && (
+                      <div className="mb-6">
+                        <h4 className="font-heading font-semibold text-lg mb-3">Особенности:</h4>
+                        <ul className="space-y-2">
+                          {selectedProduct.features.map((feature, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <Icon name="CheckCircle" className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                              <span className="text-muted-foreground">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="flex gap-3">
+                      <Button 
+                        className="flex-1" 
+                        size="lg"
+                        onClick={() => {
+                          addToCart();
+                          setIsDialogOpen(false);
+                        }}
+                      >
+                        <Icon name="ShoppingCart" className="w-5 h-5 mr-2" />
+                        Добавить в корзину
+                      </Button>
+                      <Button variant="outline" size="lg">
+                        <Icon name="Heart" className="w-5 h-5" />
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mt-4">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Icon name="Truck" className="w-4 h-4" />
+                        <span>Доставка 1-3 дня</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Icon name="Shield" className="w-4 h-4" />
+                        <span>Гарантия 2 года</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Icon name="RefreshCw" className="w-4 h-4" />
+                        <span>Возврат 14 дней</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Icon name="Wrench" className="w-4 h-4" />
+                        <span>Бесплатная сборка</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     ),
     about: (
